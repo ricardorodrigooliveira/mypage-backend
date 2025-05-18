@@ -1,11 +1,12 @@
 import express from "express";
+import upload from "../uploadConfig.js";
 import pool from "../db.js";
 import jwt from "jsonwebtoken";
 
 const router = express.Router();
 const SECRET = process.env.JWT_SECRET;
 
-// Middleware para autenticação
+// Middleware de autenticação
 const autenticar = (req, res, next) => {
   const authHeader = req.headers.authorization;
 
@@ -22,7 +23,7 @@ const autenticar = (req, res, next) => {
   }
 };
 
-// Criar uma nova postagem
+// Criar uma nova postagem (texto)
 router.post("/", autenticar, async (req, res) => {
   const { titulo, conteudo } = req.body;
   const usuarioId = req.usuario.id;
@@ -38,6 +39,31 @@ router.post("/", autenticar, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Erro ao criar postagem" });
+  }
+});
+
+// Upload de imagem com conteúdo
+router.post("/upload", autenticar, upload.single("arquivo"), async (req, res) => {
+  const { titulo, conteudo } = req.body;
+  const usuarioId = req.usuario.id;
+
+  if (!req.file) {
+    return res.status(400).json({ error: "Nenhum arquivo enviado" });
+  }
+
+  const filename = req.file.filename;
+
+  try {
+    const result = await pool.query(
+      `INSERT INTO t_postagem (usuario_id, titulo, conteudo, arquivo) 
+       VALUES ($1, $2, $3, $4) RETURNING *`,
+      [usuarioId, titulo, conteudo, filename]
+    );
+
+    res.status(201).json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erro ao salvar postagem" });
   }
 });
 
