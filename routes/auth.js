@@ -5,7 +5,7 @@ import pool from "../db.js";
 
 const router = express.Router();
 
-const SECRET = 'sua_chave_secreta_super_segura'; // Idealmente use env var
+const SECRET = process.env.JWT_SECRET;
 
 router.post("/register", async (req, res) => {
   const { name, email, password } = req.body;
