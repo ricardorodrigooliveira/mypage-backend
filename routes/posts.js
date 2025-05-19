@@ -23,52 +23,36 @@ const autenticar = (req, res, next) => {
   }
 };
 
-// Criar uma nova postagem (texto)
-router.post("/", autenticar, async (req, res) => {
-  const { titulo, conteudo } = req.body;
-  const usuarioId = req.usuario.id;
+// Criar nova postagem (com ou sem arquivo)
+// Aceita múltiplos campos de arquivo (arquivo ou image)
+router.post("/",autenticar,upload.fields([{ name: "arquivo", maxCount: 1 },
+                                          { name: "image", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    const { titulo, conteudo } = req.body;
+    const usuarioId = req.usuario.id;
 
-  try {
-    const result = await pool.query(
-      `INSERT INTO t_postagem (usuario_id, titulo, conteudo) 
-       VALUES ($1, $2, $3) RETURNING *`,
-      [usuarioId, titulo, conteudo]
-    );
+    const arquivo = req.files?.arquivo?.[0]?.filename || null;
+    const image = req.files?.image?.[0]?.filename || null;
 
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Erro ao criar postagem" });
+    try {
+      const result = await pool.query(
+        `INSERT INTO t_postagem (usuario_id, titulo, conteudo, arquivo) 
+         VALUES ($1, $2, $3, $4) RETURNING *`,
+        [usuarioId, titulo, conteudo, arquivo || image] // só salva 1
+      );
+
+      res.status(201).json(result.rows[0]);
+    } catch (err) {
+      console.error("Erro ao criar postagem:", err);
+      res.status(500).json({ error: "Erro ao criar postagem" });
+    }
   }
-});
+);
 
-// Upload de imagem com conteúdo
-router.post("/upload", autenticar, upload.single("arquivo"), async (req, res) => {
-  const { titulo, conteudo } = req.body;
-  const usuarioId = req.usuario.id;
-
-  if (!req.file) {
-    return res.status(400).json({ error: "Nenhum arquivo enviado" });
-  }
-
-  const filename = req.file.filename;
-
-  try {
-    const result = await pool.query(
-      `INSERT INTO t_postagem (usuario_id, titulo, conteudo, arquivo) 
-       VALUES ($1, $2, $3, $4) RETURNING *`,
-      [usuarioId, titulo, conteudo, filename]
-    );
-
-    res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Erro ao salvar postagem" });
-  }
-});
 
 // Listar postagens
-router.get("/", autenticar, async (req, res) => {
+router.get("/", async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT p.*, u.name AS autor 
