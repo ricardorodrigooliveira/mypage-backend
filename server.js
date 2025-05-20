@@ -16,8 +16,7 @@ const app = express();
 app.use(express.json());
 
 app.use(cors({
-  origin: import.meta.env.VITE_API_URL,
-  credentials: true
+  origin: ["http://localhost:5173", "https://ricardorodrigooliveira.github.io"],
 }));
 
 // Serve arquivos da pasta uploads
