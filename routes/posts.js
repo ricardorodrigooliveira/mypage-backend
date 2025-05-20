@@ -55,7 +55,7 @@ router.post("/",autenticar,upload.fields([{ name: "arquivo", maxCount: 1 },
 router.get("/", async (req, res) => {
   try {
     const result = await pool.query(
-      `SELECT p.*, u.name AS autor 
+      `SELECT p.usuario_id, p.titulo, p.conteudo, p.data_criacao, p.arquivo, u.name AS autor 
        FROM t_postagem p 
        JOIN t_usuario u ON u.id = p.usuario_id 
        ORDER BY p.data_criacao DESC`
