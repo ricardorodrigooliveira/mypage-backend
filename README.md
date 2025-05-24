@@ -1,2 +1,2 @@
 # mypage-backend
-Backend para o repositorio mypage que vai rodar na Railway
+Backend para o repositório mypage que vai rodar na Railway
