@@ -15,8 +15,14 @@ const app = express();
 
 app.use(express.json());
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://ricardorodrigooliveira.github.io",
+];
+
 app.use(cors({
-  origin: ["http://localhost:5173", "https://ricardorodrigooliveira.github.io"],
+  origin: allowedOrigins,
+  credentials: true, // use apenas se estiver usando cookies com autenticação
 }));
 
 // Serve arquivos da pasta uploads
